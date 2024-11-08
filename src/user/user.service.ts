@@ -1,4 +1,4 @@
-import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcryptjs';
@@ -23,12 +23,12 @@ export class UserService {
   async loginUser(email: string, password: string): Promise<any> {
     const existingUser = await this.userModel.findOne({email});
     if (!existingUser) {
-      throw new ConflictException('Email or password is incorrect!');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     const isPasswordValid = await bcrypt.compare(password, existingUser.password);
     if (!isPasswordValid) {
-      throw new ConflictException('Email or password is incorrect!');
+      throw new UnauthorizedException('Invalid email or password');
     }
 
     console.log("Featch log in");
@@ -38,5 +38,9 @@ export class UserService {
 
   async countUsers(): Promise<number> {
     return this.userModel.countDocuments();
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userModel.findOne({ email }).exec();
   }
 }
